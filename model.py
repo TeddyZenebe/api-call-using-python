@@ -16,7 +16,9 @@ def create_connection(db_file):
 conn = sqlite3.connect('rarr.db')
 
 db = conn.cursor()
-
+sql1 = 'DELETE FROM sensorData'
+db.execute(sql1)
+conn.commit()
 #db.execute("create Table sensorData(site_id text, sensor_id text, data_time text, stage(ft) real)")
 url = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensorData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&class=20'
 
