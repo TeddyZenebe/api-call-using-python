@@ -26,9 +26,9 @@ def runModelPy():
     #db.execute(sql3)
     #conn.commit()
     #db.execute("create Table sensorData(site_id text, sensor_id text, data_time text, stage(ft) real)")
-    db.execute("create Table sensorDatum(Site_Name text, site_id text, Datum_ft real)")
-    db.execute("create Table sensorStatusData(site_id text, sensor_id text, normal integer, active integer, valid integer)")
-    db.execute("create Table CurrentsensorData(site_id text, sensor_id text, data_time text, stage_ft real)")
+    #db.execute("create Table sensorDatum(Site_Name text, site_id text, Datum_ft real)")
+    #db.execute("create Table sensorStatusData(site_id text, sensor_id text, normal integer, active integer, valid integer)")
+    #db.execute("create Table CurrentsensorData(site_id text, sensor_id text, data_time text, stage_ft real)")
     url = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensorData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&class=20'
     url_meta = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensormetaData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&class=20&active=1&normal=1&valid=1'
     res = requests.get(url)
@@ -63,6 +63,34 @@ def runModelPy():
         #text = x.find('data_time')
         data = (site_id, sensor_id, data_time, stage)
         db.execute(sql, data)
+        conn.commit()
+
+    #this part (including the API call) will be a simple function and get run every week or whenever the sys admin want
+    #Used to get the sensors statuse and right to the database
+
+    for x in rowMeta[0][0].findall('row'):
+        if x.find('site_id').text:
+            site_id = x.find('site_id').text
+        else:
+            site_id = None
+        if x.find('sensor_id').text:
+            sensor_id = x.find('sensor_id').text
+        else:
+            sensor_id = None
+        if x.find('normal').text:
+            normal = x.find('normal').text
+        else:
+            normal = None
+        if x.find('active').text:
+            active = x.find('active').text
+        else:
+            active = None
+        if x.find('valid').text:
+            valid = x.find('valid').text
+        else:
+            valid = None
+        data = (site_id, sensor_id, normal, active, valid)
+        db.execute(sql_status, data)
         conn.commit()
 runModelPy()       
 #db.execute("select * from sensorData")
