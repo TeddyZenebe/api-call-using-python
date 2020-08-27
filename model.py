@@ -2,6 +2,10 @@ import sqlite3
 from sqlite3 import Error
 import requests
 import xml.etree.ElementTree as ET
+import schedule
+import time
+#start the simulation 
+start_time = time.time()
 #in case if we need error report---for now I better keep with out using this function but good stuff
 def create_connection(db_file):
    
@@ -18,7 +22,7 @@ def runModelPy():
     db = conn.cursor()
     sql1 = 'DELETE FROM sensorData'
     #sql2 = 'DELETE FROM sensorStatusData'
-    #sql3 = 'DELETE FROM  CurrentsensorData'
+    sql3 = 'DELETE FROM  CurrentsensorData'
     db.execute(sql1)
     conn.commit()
     #db.execute(sql2)
@@ -68,7 +72,7 @@ def runModelPy():
     #this part (including the API call) will be a simple function and get run every week or whenever the sys admin want
     #Used to get the sensors statuse and right to the database
 
-    for x in rowMeta[0][0].findall('row'):
+    """for x in rowMeta[0][0].findall('row'):
         if x.find('site_id').text:
             site_id = x.find('site_id').text
         else:
@@ -91,9 +95,38 @@ def runModelPy():
             valid = None
         data = (site_id, sensor_id, normal, active, valid)
         db.execute(sql_status, data)
+        conn.commit()  """
+    #cline up function and write the database
+    db.execute("select * from sensorDatum")
+    sensoreDatumRow = db.fetchall()
+    for x in sensoreDatumRow:
+        site_Id_Datum = x[1]
+        datumValue = x[2]
+        db.execute("SELECT * FROM sensorData WHERE site_id=?", (site_Id_Datum,))
+        sensoreDataRow = db.fetchone()
+        newSite = sensoreDataRow[0]
+        newSensor = sensoreDataRow[1]
+        newDateTime = sensoreDataRow[2]
+        stageValue = sensoreDataRow[3]
+        if stageValue > 100:
+            newStage = stageValue
+        else:
+            newStage = datumValue + stageValue
+        data = (newSite, newSensor, newDateTime, newStage)
+        db.execute(sql_current, data)
         conn.commit()
-runModelPy()       
-#db.execute("select * from sensorData")
+    print("I'm scheduled activity every 2 minutes...")
+runModelPy()
+endTime = time.time()
+print('Start Time', start_time)
+print('End Time time', start_time)
+print("--- %s seconds ---" % (endTime - start_time))
+
+#schedule.every(2).minutes.do(runModelPy)
+
+#while True:
+    #schedule.run_pending()
+    #time.sleep(1)
 
 #conn.commit()
 
