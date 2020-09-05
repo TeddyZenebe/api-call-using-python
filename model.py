@@ -33,8 +33,8 @@ def runModelPy():
     #db.execute("create Table sensorDatum(Site_Name text, site_id text, Datum_ft real)")
     #db.execute("create Table sensorStatusData(site_id text, sensor_id text, normal integer, active integer, valid integer)")
     #db.execute("create Table CurrentsensorData(site_id text, sensor_id text, data_time text, stage_ft real)")
-    url = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensorData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&class=20'
-    url_meta = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensormetaData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&class=20&active=1&normal=1&valid=1'
+    url = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensorData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET'
+    url_meta = 'https://meckgisdev.mecklenburgcountync.gov/api/contrail?method=GetSensormetaData&system=c57f3913-ac01-4aa7-b633-e8311f45f74a&tz=ET&active=1&normal=1&valid=1'
     res = requests.get(url)
     res_meta = requests.get(url_meta)
     sensorDatas = res.text
@@ -104,17 +104,18 @@ def runModelPy():
         datumValue = x[2]
         db.execute("SELECT * FROM sensorData WHERE site_id=?", (site_Id_Datum,))
         sensoreDataRow = db.fetchone()
-        newSite = sensoreDataRow[0]
-        newSensor = sensoreDataRow[1]
-        newDateTime = sensoreDataRow[2]
-        stageValue = sensoreDataRow[3]
-        if stageValue > 100:
-            newStage = stageValue
-        else:
-            newStage = datumValue + stageValue
-        data = (newSite, newSensor, newDateTime, newStage)
-        db.execute(sql_current, data)
-        conn.commit()
+        if sensoreDataRow is not None:
+            newSite = sensoreDataRow[0]
+            newSensor = sensoreDataRow[1]
+            newDateTime = sensoreDataRow[2]
+            stageValue = sensoreDataRow[3]
+            if stageValue > 100:
+                newStage = stageValue
+            else:
+                newStage = datumValue + stageValue
+            data = (newSite, newSensor, newDateTime, newStage)
+            db.execute(sql_current, data)
+    conn.commit()
     print("I'm scheduled activity every 2 minutes...")
 runModelPy()
 endTime = time.time()
